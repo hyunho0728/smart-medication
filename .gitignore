@@ -1,0 +1,17 @@
+# --- Visual Studio & C# ---
+.vs/
+[Bb]in/
+[Oo]bj/
+*.suo
+*.user
+*.pdb
+*.cache
+*.vsidx
+
+# --- NuGet Packages ---
+# 패키지 폴더 무시
+packages/
+**/packages/*
+
+# 단, 패키지 설정 파일은 유지해야 함 (중요!)
+!packages.config
