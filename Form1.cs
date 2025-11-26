@@ -12,15 +12,18 @@ namespace smart_medication
         string connectDB = "Server=localhost;Port=3306;Uid=root;Pwd=1234;Charset=utf8";
         private string currentUserName;
 
+        private string lastCheckedMinute = "";
+
         public Form1(string userName)
         {
-            // 디자인 파일(MainForm.Designer.cs)에 정의된 UI 생성 함수 호출
             InitializeComponent();
 
             btnMedicineRegi.Text = "약물 관리";
 
             this.currentUserName = userName;
             lblWelcom.Text = $"안녕하세요 {userName}님!";
+
+            // [수정] 메인 화면의 테스트 버튼 제거됨
 
             if (!dgvMedicineList.Columns.Contains("colDosage"))
             {
@@ -30,17 +33,26 @@ namespace smart_medication
                 dgvMedicineList.Columns.Add(col);
             }
 
+            // 프로그램 시작 시 카카오 토큰 파일 로드 (유지)
+            KakaoHelper.LoadToken();
+
+            if (!KakaoHelper.IsTokenLoaded)
+            {
+                // 토큰이 없으면 콘솔 로그 또는 필요 시 메시지박스
+                Console.WriteLine("kakao_token.txt 파일이 없습니다.");
+            }
+
             updateCurrentTime();
             LoadData();
             updateTodayMedicineCount();
 
             dgvMedicineList.ReadOnly = false;
 
-            dgvMedicineList.Columns[0].ReadOnly = true; // 시간
-            dgvMedicineList.Columns[1].ReadOnly = true; // 약품
-            dgvMedicineList.Columns[2].ReadOnly = false; // 체크박스
-            dgvMedicineList.Columns[3].ReadOnly = false; // 비고
-            dgvMedicineList.Columns[4].ReadOnly = true; // 남은 약
+            dgvMedicineList.Columns[0].ReadOnly = true;
+            dgvMedicineList.Columns[1].ReadOnly = true;
+            dgvMedicineList.Columns[2].ReadOnly = false;
+            dgvMedicineList.Columns[3].ReadOnly = false;
+            dgvMedicineList.Columns[4].ReadOnly = true;
 
             if (dgvMedicineList.Columns["colDosage"] != null)
             {
@@ -51,8 +63,6 @@ namespace smart_medication
 
             dgvMedicineList.CurrentCellDirtyStateChanged += dgvMedicineList_CurrentCellDirtyStateChanged;
             dgvMedicineList.CellValueChanged += dgvMedicineList_CellValueChanged;
-
-            // [추가] 셀 스타일링(취소선)을 위한 이벤트 연결
             dgvMedicineList.CellFormatting += dgvMedicineList_CellFormatting;
 
             dgvMedicineList.DefaultCellStyle.SelectionBackColor = Color.White;
@@ -119,7 +129,7 @@ namespace smart_medication
                         JOIN Medications M ON S.med_id = M.med_id
                         JOIN Users U ON S.user_id = U.user_id
                         WHERE U.user_name = @userName 
-                        ORDER BY S.take_time ASC"; // 초기 정렬은 시간순
+                        ORDER BY S.take_time ASC";
 
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@userName", this.currentUserName);
@@ -146,7 +156,6 @@ namespace smart_medication
                         }
                     }
 
-                    // [추가] 데이터 로드 후 정렬 적용 (체크된 건 아래로)
                     SortMedicineList();
                 }
                 catch (Exception ex)
@@ -156,13 +165,11 @@ namespace smart_medication
             }
         }
 
-        // [추가] 리스트 정렬 함수: 1순위 복용여부(False가 위), 2순위 시간(오름차순)
         private void SortMedicineList()
         {
             dgvMedicineList.Sort(new RowComparer());
         }
 
-        // [추가] 커스텀 정렬 클래스
         private class RowComparer : System.Collections.IComparer
         {
             public int Compare(object x, object y)
@@ -173,11 +180,8 @@ namespace smart_medication
                 bool check1 = Convert.ToBoolean(row1.Cells["colCheck"].Value);
                 bool check2 = Convert.ToBoolean(row2.Cells["colCheck"].Value);
 
-                // 1. 체크 여부 비교 (체크 안 된 것이 위로)
-                // false(0) < true(1) 이므로, 오름차순 정렬하면 false가 먼저 옴
                 int result = check1.CompareTo(check2);
 
-                // 2. 체크 여부가 같다면 시간순 정렬
                 if (result == 0)
                 {
                     string time1 = row1.Cells[0].Value.ToString();
@@ -189,7 +193,6 @@ namespace smart_medication
             }
         }
 
-        // [추가] 셀 스타일링 (취소선 및 회색 처리)
         private void dgvMedicineList_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
             if (e.RowIndex >= 0)
@@ -199,15 +202,13 @@ namespace smart_medication
 
                 if (isChecked)
                 {
-                    // 복용 완료: 취소선 + 회색 텍스트
                     e.CellStyle.Font = new Font(dgvMedicineList.Font, FontStyle.Strikeout);
                     e.CellStyle.ForeColor = Color.Gray;
                     e.CellStyle.SelectionForeColor = Color.Gray;
                 }
                 else
                 {
-                    // 미복용: 기본 폰트 + 검정 텍스트
-                    e.CellStyle.Font = new Font(dgvMedicineList.Font, FontStyle.Regular); // 또는 Bold
+                    e.CellStyle.Font = new Font(dgvMedicineList.Font, FontStyle.Regular);
                     e.CellStyle.ForeColor = Color.Black;
                     e.CellStyle.SelectionForeColor = Color.Black;
                 }
@@ -250,18 +251,15 @@ namespace smart_medication
                 SyncAllRowsStock(medName, newStock);
                 updateTodayMedicineCount();
 
-                // [추가] 값 변경 후 즉시 재정렬 (체크하면 아래로 이동)
-                // Invoke를 사용하여 UI 갱신 충돌 방지
                 this.BeginInvoke(new Action(() => {
                     SortMedicineList();
-                    dgvMedicineList.Refresh(); // 스타일 적용 갱신
+                    dgvMedicineList.Refresh();
                 }));
             }
         }
 
         private void SyncAllRowsStock(string targetMedName, int newStock)
         {
-            // 재정렬 시 이벤트가 발생할 수 있으므로 핸들러 관리가 중요
             dgvMedicineList.CellValueChanged -= dgvMedicineList_CellValueChanged;
 
             foreach (DataGridViewRow r in dgvMedicineList.Rows)
@@ -302,6 +300,35 @@ namespace smart_medication
         private void updateTimer_Tick(object sender, EventArgs e)
         {
             updateCurrentTime();
+            CheckAndSendKakaoAlert();
+        }
+
+        private void CheckAndSendKakaoAlert()
+        {
+            string currentMinute = DateTime.Now.ToString("HH:mm");
+
+            if (lastCheckedMinute == currentMinute) return;
+            lastCheckedMinute = currentMinute;
+
+            if (!KakaoHelper.IsTokenLoaded) return;
+
+            foreach (DataGridViewRow row in dgvMedicineList.Rows)
+            {
+                if (row.Cells[0].Value == null) continue;
+
+                string timeStr = row.Cells[0].Value.ToString();
+                bool isTaken = Convert.ToBoolean(row.Cells["colCheck"].Value);
+                string medName = row.Cells[1].Value.ToString();
+
+                if (timeStr.StartsWith(currentMinute) && !isTaken)
+                {
+                    string message = $"{currentUserName}님, {medName} 복용 시간입니다 ({timeStr})";
+
+                    KakaoHelper.SendMessageAsync(message);
+
+                    System.Media.SystemSounds.Exclamation.Play();
+                }
+            }
         }
 
         private void btnMedicineRegi_Click(object sender, EventArgs e)
@@ -318,12 +345,10 @@ namespace smart_medication
             LoadData();
         }
 
-        // [추가] 로그아웃 버튼
         private void btnLogout_Click(object sender, EventArgs e)
         {
             if (MessageBox.Show("로그아웃 하시겠습니까?", "확인", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
-                // 애플리케이션을 재시작하여 로그인 화면으로 돌아갑니다.
                 Application.Restart();
             }
         }
@@ -372,8 +397,6 @@ namespace smart_medication
 
             bool newState = !isAllChecked;
 
-            // 일괄 변경 시에는 정렬을 마지막에 한 번만 하기 위해 이벤트 잠시 해제 고려 가능하나,
-            // 간단하게 루프 돌면서 처리
             foreach (DataGridViewRow row in targetRows)
             {
                 if (Convert.ToBoolean(row.Cells["colCheck"].Value) != newState)

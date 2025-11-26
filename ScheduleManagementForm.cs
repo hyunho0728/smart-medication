@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Drawing; // 버튼 색상/위치 설정을 위해 추가
 using System.Windows.Forms;
 using MySql.Data.MySqlClient;
 
@@ -17,6 +18,19 @@ namespace smart_medication
         {
             InitializeComponent();
             this.currentUserName = userName;
+
+            // [추가] 카톡 테스트 버튼 생성 (메인화면에서 이동됨)
+            Button btnTestKakao = new Button();
+            btnTestKakao.Text = "카톡 테스트";
+            btnTestKakao.BackColor = Color.Yellow;
+            btnTestKakao.ForeColor = Color.Black;
+            btnTestKakao.Size = new Size(100, 30);
+            // 위치 조정: 제목(복용 시간 관리) 오른쪽 여백에 배치
+            btnTestKakao.Location = new Point(480, 15);
+            btnTestKakao.Click += BtnTestKakao_Click;
+            this.Controls.Add(btnTestKakao);
+            btnTestKakao.BringToFront();
+
             GetUserId();
             LoadMedicationCombo();
             LoadScheduleList();
@@ -24,8 +38,28 @@ namespace smart_medication
             cboMeds.SelectedIndexChanged += CboMeds_SelectedIndexChanged;
             if (cboMeds.Items.Count > 0) CboMeds_SelectedIndexChanged(null, null);
 
-            // [추가] 폼 로드 시 기본 시간 설정
             ResetInputs(false);
+        }
+
+        // [추가] 테스트 버튼 클릭 이벤트
+        private async void BtnTestKakao_Click(object sender, EventArgs e)
+        {
+            // 토큰이 로드되었는지 확인 (보통 Form1에서 로드됨)
+            if (!KakaoHelper.IsTokenLoaded)
+            {
+                // 혹시 로드가 안 되어 있으면 여기서 시도
+                KakaoHelper.LoadToken();
+            }
+
+            if (!KakaoHelper.IsTokenLoaded)
+            {
+                MessageBox.Show("토큰이 로드되지 않았습니다.\n실행 폴더에 'kakao_token.txt'가 있는지 확인하세요.");
+                return;
+            }
+
+            MessageBox.Show("전송을 시도합니다...");
+            await KakaoHelper.SendMessageAsync("테스트 메시지입니다. 잘 도착했나요?");
+            MessageBox.Show("전송 요청 완료! 카톡을 확인해보세요.");
         }
 
         private void GetUserId()
@@ -127,18 +161,16 @@ namespace smart_medication
 
                 ResetInputs(false);
 
-                string timeStr = row.Cells["take_time"].Value.ToString(); // DB의 시간 (예: 09:30:00)
+                string timeStr = row.Cells["take_time"].Value.ToString();
                 DateTime time = DateTime.Parse(timeStr);
                 int dosage = Convert.ToInt32(row.Cells["dosage_per_take"].Value);
 
-                // 시간대에 따라 적절한 입력칸에 매핑
-                // 12시 이전: 아침, 12~17시: 점심, 17시 이후: 저녁으로 간주
                 int hour = time.Hour;
 
                 if (hour < 12)
                 {
                     chkMorning.Checked = true;
-                    dtpMorning.Value = DateTime.Today.Add(time.TimeOfDay); // 시간 설정
+                    dtpMorning.Value = DateTime.Today.Add(time.TimeOfDay);
                     numMorning.Value = dosage;
                 }
                 else if (hour >= 12 && hour < 17)
@@ -168,11 +200,10 @@ namespace smart_medication
             numLunch.Value = 1;
             numDinner.Value = 1;
 
-            // [추가] 시간 선택기를 기본값으로 초기화
             DateTime today = DateTime.Today;
-            dtpMorning.Value = today.AddHours(8);  // 08:00
-            dtpLunch.Value = today.AddHours(13);   // 13:00
-            dtpDinner.Value = today.AddHours(19);  // 19:00
+            dtpMorning.Value = today.AddHours(8);
+            dtpLunch.Value = today.AddHours(13);
+            dtpDinner.Value = today.AddHours(19);
         }
 
         private void RecalculateDailyDosage(int medId)
@@ -219,7 +250,6 @@ namespace smart_medication
 
             int medId = Convert.ToInt32(cboMeds.SelectedValue);
 
-            // [수정] 선택된 시간을 가져와서 저장
             List<(string Time, int Dosage)> schedulesToAdd = new List<(string, int)>();
 
             if (chkMorning.Checked)
@@ -231,7 +261,7 @@ namespace smart_medication
             if (chkDinner.Checked)
                 schedulesToAdd.Add((dtpDinner.Value.ToString("HH:mm:ss"), (int)numDinner.Value));
 
-            int totalDailyDosage = 0; // 임시 값
+            int totalDailyDosage = 0;
             foreach (var item in schedulesToAdd) totalDailyDosage += item.Dosage;
 
             using (MySqlConnection conn = new MySqlConnection(connectDB))
@@ -290,7 +320,6 @@ namespace smart_medication
             string newTime = "";
             int newDosage = 0;
 
-            // [수정] 선택된 DateTimePicker의 시간을 사용
             if (chkMorning.Checked)
             {
                 newTime = dtpMorning.Value.ToString("HH:mm:ss");
