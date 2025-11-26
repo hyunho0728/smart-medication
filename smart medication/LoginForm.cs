@@ -23,8 +23,8 @@ namespace smart_medication
 
             if (autoLogin)
             {
-                txtUserId.Text = "hyunho0728";
-                txtPassword.Text = "HyunHo0728@";
+                txtUserId.Text = "유현호";
+                txtPassword.Text = "1234";
             }
         }
 

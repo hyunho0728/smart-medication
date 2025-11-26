@@ -39,12 +39,14 @@ namespace smart_medication
                               PRIMARY KEY (`med_id`)
                             ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
 
+                    // [수정됨] dosage_per_take (1회 복용량) 컬럼 추가
                     query.Add(@"CREATE TABLE IF NOT EXISTS `schedules` (
                               `schedule_id` int NOT NULL AUTO_INCREMENT COMMENT '스케줄 고유 ID',
                               `user_id` int NOT NULL COMMENT '사용자 ID (Users 테이블 참조)',
                               `med_id` int NOT NULL COMMENT '약품 ID (Medications 테이블 참조)',
                               `take_time` time NOT NULL COMMENT '복용 시간 (예: 08:00:00)',
                               `daily_dosage` int DEFAULT '3' COMMENT '이 스케줄의 하루 총 복용량',
+                              `dosage_per_take` int DEFAULT '1' COMMENT '1회 복용량 (이 시간에 먹는 알약 수)',
                               PRIMARY KEY (`schedule_id`),
                               KEY `user_id` (`user_id`),
                               KEY `med_id` (`med_id`),
@@ -69,7 +71,6 @@ namespace smart_medication
                         WHERE NOT EXISTS (SELECT * FROM users WHERE user_name = '유현호');
                     ");
 
-                    // 관리자 계정도 필요하면 추가
                     query.Add(@"
                         INSERT INTO users (user_name, password) 
                         SELECT 'admin', '0728' 
