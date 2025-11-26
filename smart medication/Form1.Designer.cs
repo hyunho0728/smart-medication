@@ -37,8 +37,8 @@
             this.bottomPanel = new System.Windows.Forms.Panel();
             this.buttonLayout = new System.Windows.Forms.TableLayoutPanel();
             this.btnMedicineRegi = new System.Windows.Forms.Button();
-            this.btnLogout = new System.Windows.Forms.Button(); // [변경] 변수명 변경 (btnUserMan -> btnLogout)
             this.btnScheduleMan = new System.Windows.Forms.Button();
+            this.btnLogout = new System.Windows.Forms.Button();
             this.mainContentWrapper = new System.Windows.Forms.Panel();
             this.borderPanel = new System.Windows.Forms.Panel();
             this.contentPanel = new System.Windows.Forms.Panel();
@@ -48,13 +48,13 @@
             this.colCheck = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.colNote = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colRemain = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.lblMedicationSummary = new System.Windows.Forms.Label();
-            this.lblTodayMedicationTitle = new System.Windows.Forms.Label();
             this.panelActionButtons = new System.Windows.Forms.FlowLayoutPanel();
             this.btnTakeMorning = new System.Windows.Forms.Button();
             this.btnTakeLunch = new System.Windows.Forms.Button();
             this.btnTakeDinner = new System.Windows.Forms.Button();
             this.btnTakeAll = new System.Windows.Forms.Button();
+            this.lblMedicationSummary = new System.Windows.Forms.Label();
+            this.lblTodayMedicationTitle = new System.Windows.Forms.Label();
             this.updateTimer = new System.Windows.Forms.Timer(this.components);
             this.topPanel.SuspendLayout();
             this.bottomPanel.SuspendLayout();
@@ -62,8 +62,8 @@
             this.mainContentWrapper.SuspendLayout();
             this.borderPanel.SuspendLayout();
             this.contentPanel.SuspendLayout();
-            this.panelActionButtons.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvMedicineList)).BeginInit();
+            this.panelActionButtons.SuspendLayout();
             this.SuspendLayout();
             // 
             // topPanel
@@ -128,8 +128,8 @@
             this.buttonLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33F));
             this.buttonLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33F));
             this.buttonLayout.Controls.Add(this.btnMedicineRegi, 0, 0);
-            this.buttonLayout.Controls.Add(this.btnScheduleMan, 1, 0); // [변경] 위치 이동 (가운데로)
-            this.buttonLayout.Controls.Add(this.btnLogout, 2, 0);      // [변경] 로그아웃 버튼 배치 (오른쪽 끝)
+            this.buttonLayout.Controls.Add(this.btnScheduleMan, 1, 0);
+            this.buttonLayout.Controls.Add(this.btnLogout, 2, 0);
             this.buttonLayout.Dock = System.Windows.Forms.DockStyle.Fill;
             this.buttonLayout.Location = new System.Drawing.Point(30, 10);
             this.buttonLayout.Name = "buttonLayout";
@@ -150,13 +150,29 @@
             this.btnMedicineRegi.Name = "btnMedicineRegi";
             this.btnMedicineRegi.Size = new System.Drawing.Size(236, 60);
             this.btnMedicineRegi.TabIndex = 0;
-            this.btnMedicineRegi.Text = "약물 관리";
+            this.btnMedicineRegi.Text = "약품 관리";
             this.btnMedicineRegi.UseVisualStyleBackColor = false;
             this.btnMedicineRegi.Click += new System.EventHandler(this.btnMedicineRegi_Click);
             // 
-            // btnLogout (로그아웃 버튼 - 교체됨)
+            // btnScheduleMan
             // 
-            this.btnLogout.BackColor = System.Drawing.Color.IndianRed; // [변경] 빨간색 계열로 설정
+            this.btnScheduleMan.BackColor = System.Drawing.Color.SteelBlue;
+            this.btnScheduleMan.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.btnScheduleMan.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnScheduleMan.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.btnScheduleMan.ForeColor = System.Drawing.Color.White;
+            this.btnScheduleMan.Location = new System.Drawing.Point(251, 5);
+            this.btnScheduleMan.Margin = new System.Windows.Forms.Padding(5);
+            this.btnScheduleMan.Name = "btnScheduleMan";
+            this.btnScheduleMan.Size = new System.Drawing.Size(236, 60);
+            this.btnScheduleMan.TabIndex = 2;
+            this.btnScheduleMan.Text = "복용 시간 관리";
+            this.btnScheduleMan.UseVisualStyleBackColor = false;
+            this.btnScheduleMan.Click += new System.EventHandler(this.btnScheduleMan_Click);
+            // 
+            // btnLogout
+            // 
+            this.btnLogout.BackColor = System.Drawing.Color.IndianRed;
             this.btnLogout.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnLogout.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnLogout.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
@@ -168,23 +184,7 @@
             this.btnLogout.TabIndex = 1;
             this.btnLogout.Text = "로그아웃";
             this.btnLogout.UseVisualStyleBackColor = false;
-            this.btnLogout.Click += new System.EventHandler(this.btnLogout_Click); // [추가] 이벤트 연결
-            // 
-            // btnScheduleMan
-            // 
-            this.btnScheduleMan.BackColor = System.Drawing.Color.SteelBlue;
-            this.btnScheduleMan.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btnScheduleMan.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnScheduleMan.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.btnScheduleMan.ForeColor = System.Drawing.Color.White;
-            this.btnScheduleMan.Location = new System.Drawing.Point(251, 5); // [변경] 위치 조정
-            this.btnScheduleMan.Margin = new System.Windows.Forms.Padding(5);
-            this.btnScheduleMan.Name = "btnScheduleMan";
-            this.btnScheduleMan.Size = new System.Drawing.Size(236, 60);
-            this.btnScheduleMan.TabIndex = 2;
-            this.btnScheduleMan.Text = "복용 시간 관리";
-            this.btnScheduleMan.UseVisualStyleBackColor = false;
-            this.btnScheduleMan.Click += new System.EventHandler(this.btnScheduleMan_Click);
+            this.btnLogout.Click += new System.EventHandler(this.btnLogout_Click);
             // 
             // mainContentWrapper
             // 
@@ -245,13 +245,13 @@
             this.colRemain});
             this.dgvMedicineList.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvMedicineList.EnableHeadersVisualStyles = false;
-            this.dgvMedicineList.Location = new System.Drawing.Point(20, 122);
+            this.dgvMedicineList.Location = new System.Drawing.Point(20, 123);
             this.dgvMedicineList.Name = "dgvMedicineList";
             this.dgvMedicineList.ReadOnly = true;
             this.dgvMedicineList.RowHeadersVisible = false;
             this.dgvMedicineList.RowTemplate.Height = 35;
             this.dgvMedicineList.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvMedicineList.Size = new System.Drawing.Size(670, 148);
+            this.dgvMedicineList.Size = new System.Drawing.Size(670, 147);
             this.dgvMedicineList.TabIndex = 2;
             // 
             // colTime
@@ -284,29 +284,6 @@
             this.colRemain.Name = "colRemain";
             this.colRemain.ReadOnly = true;
             // 
-            // lblMedicationSummary
-            // 
-            this.lblMedicationSummary.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.lblMedicationSummary.Font = new System.Drawing.Font("맑은 고딕", 11F);
-            this.lblMedicationSummary.Location = new System.Drawing.Point(20, 270);
-            this.lblMedicationSummary.Name = "lblMedicationSummary";
-            this.lblMedicationSummary.Size = new System.Drawing.Size(670, 40);
-            this.lblMedicationSummary.TabIndex = 1;
-            this.lblMedicationSummary.Text = "오늘 복용해야하는 약이 0가지 있어요";
-            this.lblMedicationSummary.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // lblTodayMedicationTitle
-            // 
-            this.lblTodayMedicationTitle.AutoSize = true;
-            this.lblTodayMedicationTitle.Dock = System.Windows.Forms.DockStyle.Top;
-            this.lblTodayMedicationTitle.Font = new System.Drawing.Font("맑은 고딕", 18F, System.Drawing.FontStyle.Bold);
-            this.lblTodayMedicationTitle.Location = new System.Drawing.Point(20, 20);
-            this.lblTodayMedicationTitle.Name = "lblTodayMedicationTitle";
-            this.lblTodayMedicationTitle.Padding = new System.Windows.Forms.Padding(0, 0, 0, 20);
-            this.lblTodayMedicationTitle.Size = new System.Drawing.Size(174, 52);
-            this.lblTodayMedicationTitle.TabIndex = 0;
-            this.lblTodayMedicationTitle.Text = "오늘의 복용 약";
-            // 
             // panelActionButtons
             // 
             this.panelActionButtons.AutoSize = true;
@@ -318,7 +295,7 @@
             this.panelActionButtons.Location = new System.Drawing.Point(20, 72);
             this.panelActionButtons.Name = "panelActionButtons";
             this.panelActionButtons.Padding = new System.Windows.Forms.Padding(0, 0, 0, 10);
-            this.panelActionButtons.Size = new System.Drawing.Size(670, 50);
+            this.panelActionButtons.Size = new System.Drawing.Size(670, 51);
             this.panelActionButtons.TabIndex = 3;
             // 
             // btnTakeMorning
@@ -377,6 +354,29 @@
             this.btnTakeAll.UseVisualStyleBackColor = false;
             this.btnTakeAll.Click += new System.EventHandler(this.btnTakeAll_Click);
             // 
+            // lblMedicationSummary
+            // 
+            this.lblMedicationSummary.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.lblMedicationSummary.Font = new System.Drawing.Font("맑은 고딕", 11F);
+            this.lblMedicationSummary.Location = new System.Drawing.Point(20, 270);
+            this.lblMedicationSummary.Name = "lblMedicationSummary";
+            this.lblMedicationSummary.Size = new System.Drawing.Size(670, 40);
+            this.lblMedicationSummary.TabIndex = 1;
+            this.lblMedicationSummary.Text = "오늘 복용해야하는 약이 0가지 있어요";
+            this.lblMedicationSummary.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // lblTodayMedicationTitle
+            // 
+            this.lblTodayMedicationTitle.AutoSize = true;
+            this.lblTodayMedicationTitle.Dock = System.Windows.Forms.DockStyle.Top;
+            this.lblTodayMedicationTitle.Font = new System.Drawing.Font("맑은 고딕", 18F, System.Drawing.FontStyle.Bold);
+            this.lblTodayMedicationTitle.Location = new System.Drawing.Point(20, 20);
+            this.lblTodayMedicationTitle.Name = "lblTodayMedicationTitle";
+            this.lblTodayMedicationTitle.Padding = new System.Windows.Forms.Padding(0, 0, 0, 20);
+            this.lblTodayMedicationTitle.Size = new System.Drawing.Size(174, 52);
+            this.lblTodayMedicationTitle.TabIndex = 0;
+            this.lblTodayMedicationTitle.Text = "오늘의 복용 약";
+            // 
             // updateTimer
             // 
             this.updateTimer.Enabled = true;
@@ -402,8 +402,8 @@
             this.borderPanel.ResumeLayout(false);
             this.contentPanel.ResumeLayout(false);
             this.contentPanel.PerformLayout();
-            this.panelActionButtons.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvMedicineList)).EndInit();
+            this.panelActionButtons.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
