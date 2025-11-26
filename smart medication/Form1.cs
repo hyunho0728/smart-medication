@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using MySql.Data.MySqlClient;
@@ -8,7 +9,7 @@ namespace smart_medication
 {
     public partial class Form1 : Form
     {
-        string connectDB = "Server=localhost;Port=3306;Database=smart_med_db;Uid=root;Pwd=1234;Charset=utf8";
+        string connectDB = "Server=localhost;Port=3306;Uid=root;Pwd=1234;Charset=utf8";
         private string currentUserName;
 
         public Form1(string userName)
@@ -78,6 +79,7 @@ namespace smart_medication
             lblMedicationSummary.Text = $"오늘 복용해야하는 약이 {notTakenCount}가지 있어요";
         }
 
+        
 
         private void LoadData()
         {

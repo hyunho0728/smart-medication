@@ -12,11 +12,20 @@ namespace smart_medication
         // 로그인 성공한 사용자 이름을 저장할 변수
         public string LoggedInUserName { get; private set; }
 
+        // 개발용 자동 로그인
+        bool autoLogin = true;
+
         public LoginForm()
         {
             InitializeComponent();
             this.Text = "로그인";
             this.StartPosition = FormStartPosition.CenterScreen;
+
+            if (autoLogin)
+            {
+                txtUserId.Text = "hyunho0728";
+                txtPassword.Text = "HyunHo0728@";
+            }
         }
 
         // 로그인 버튼 클릭 이벤트 (디자이너에서 더블클릭해서 연결 필요)
