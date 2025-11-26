@@ -15,3 +15,6 @@ packages/
 
 # 단, 패키지 설정 파일은 유지해야 함 (중요!)
 !packages.config
+
+# db 폴더 무시
+db_data/

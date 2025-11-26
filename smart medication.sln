@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.13.35825.156 d17.13
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11217.181 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "smart medication", "smart medication.csproj", "{1FACAF22-A019-42CA-938C-91894984A012}"
 EndProject
@@ -20,6 +20,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {B97BF6E4-AC53-414F-B042-156421E05AA4}
+		SolutionGuid = {C1E9459D-022A-4EFC-AB1C-556AF2038F3D}
 	EndGlobalSection
 EndGlobal

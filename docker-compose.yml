@@ -1,0 +1,16 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: smart_med_mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: smart_med_db
+      TZ: Asia/Seoul
+    volumes:
+      - ./db_data:/var/lib/mysql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
