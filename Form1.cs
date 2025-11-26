@@ -9,10 +9,10 @@ namespace smart_medication
 {
     public partial class Form1 : Form
     {
-        string connectDB = "Server=localhost;Port=3306;Uid=root;Pwd=1234;Charset=utf8";
+        string connectDB = "Server=localhost;Port=3306;Database=smart_med_db;Uid=root;Pwd=1234;Charset=utf8";
         private string currentUserName;
-
         private string lastCheckedMinute = "";
+        private bool isLoading = false;
 
         public Form1(string userName)
         {
@@ -23,8 +23,6 @@ namespace smart_medication
             this.currentUserName = userName;
             lblWelcom.Text = $"안녕하세요 {userName}님!";
 
-            // [수정] 메인 화면의 테스트 버튼 제거됨
-
             if (!dgvMedicineList.Columns.Contains("colDosage"))
             {
                 DataGridViewTextBoxColumn col = new DataGridViewTextBoxColumn();
@@ -33,12 +31,17 @@ namespace smart_medication
                 dgvMedicineList.Columns.Add(col);
             }
 
-            // 프로그램 시작 시 카카오 토큰 파일 로드 (유지)
-            KakaoHelper.LoadToken();
+            if (!dgvMedicineList.Columns.Contains("colScheduleId"))
+            {
+                DataGridViewTextBoxColumn colId = new DataGridViewTextBoxColumn();
+                colId.Name = "colScheduleId";
+                colId.Visible = false;
+                dgvMedicineList.Columns.Add(colId);
+            }
 
+            KakaoHelper.LoadToken();
             if (!KakaoHelper.IsTokenLoaded)
             {
-                // 토큰이 없으면 콘솔 로그 또는 필요 시 메시지박스
                 Console.WriteLine("kakao_token.txt 파일이 없습니다.");
             }
 
@@ -47,7 +50,6 @@ namespace smart_medication
             updateTodayMedicineCount();
 
             dgvMedicineList.ReadOnly = false;
-
             dgvMedicineList.Columns[0].ReadOnly = true;
             dgvMedicineList.Columns[1].ReadOnly = true;
             dgvMedicineList.Columns[2].ReadOnly = false;
@@ -110,6 +112,7 @@ namespace smart_medication
 
         private void LoadData()
         {
+            isLoading = true;
             dgvMedicineList.Rows.Clear();
 
             using (MySqlConnection conn = new MySqlConnection(connectDB))
@@ -120,14 +123,19 @@ namespace smart_medication
 
                     string query = @"
                         SELECT 
+                            S.schedule_id,
                             S.take_time, 
                             M.med_name, 
                             M.stock_quantity, 
                             S.daily_dosage,
-                            S.dosage_per_take
+                            S.dosage_per_take,
+                            IFNULL(L.is_taken, 0) AS is_taken
                         FROM Schedules S
                         JOIN Medications M ON S.med_id = M.med_id
                         JOIN Users U ON S.user_id = U.user_id
+                        LEFT JOIN MedicationLogs L 
+                            ON S.schedule_id = L.schedule_id 
+                            AND L.taken_date = CURDATE()
                         WHERE U.user_name = @userName 
                         ORDER BY S.take_time ASC";
 
@@ -138,9 +146,12 @@ namespace smart_medication
                     {
                         while (reader.Read())
                         {
+                            int scheduleId = Convert.ToInt32(reader["schedule_id"]);
                             string timeStr = reader["take_time"].ToString();
                             if (timeStr.Length > 5) timeStr = timeStr.Substring(0, 5);
                             string medName = reader["med_name"].ToString();
+
+                            bool isTaken = Convert.ToBoolean(reader["is_taken"]);
 
                             int stock = Convert.ToInt32(reader["stock_quantity"]);
                             int dailyDosage = Convert.ToInt32(reader["daily_dosage"]);
@@ -151,8 +162,10 @@ namespace smart_medication
                             string remainText = $"{stock}정 ({days:0.#}일분)";
                             string dosageText = $"{dosagePerTake}정";
 
-                            int rowIndex = dgvMedicineList.Rows.Add(timeStr, medName, false, "", remainText, dosageText);
+                            int rowIndex = dgvMedicineList.Rows.Add(timeStr, medName, isTaken, "", remainText, dosageText);
+
                             dgvMedicineList.Rows[rowIndex].Tag = new int[] { dailyDosage, dosagePerTake };
+                            dgvMedicineList.Rows[rowIndex].Cells["colScheduleId"].Value = scheduleId;
                         }
                     }
 
@@ -161,6 +174,10 @@ namespace smart_medication
                 catch (Exception ex)
                 {
                     MessageBox.Show("데이터 로드 실패: " + ex.Message);
+                }
+                finally
+                {
+                    isLoading = false;
                 }
             }
         }
@@ -225,12 +242,16 @@ namespace smart_medication
 
         private void dgvMedicineList_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.RowIndex >= 0 && e.ColumnIndex == 2)
+            if (isLoading) return;
+
+            if (e.RowIndex >= 0 && e.ColumnIndex == 2) // colCheck 인덱스
             {
                 DataGridViewRow row = dgvMedicineList.Rows[e.RowIndex];
 
                 bool isChecked = Convert.ToBoolean(row.Cells[2].Value);
                 string medName = row.Cells[1].Value.ToString();
+
+                int scheduleId = Convert.ToInt32(row.Cells["colScheduleId"].Value);
 
                 string currentText = row.Cells[4].Value.ToString();
                 int currentStock = 0;
@@ -248,6 +269,9 @@ namespace smart_medication
                 if (newStock < 0) newStock = 0;
 
                 UpdateStockToDB(medName, newStock);
+
+                SaveLogStatus(scheduleId, isChecked);
+
                 SyncAllRowsStock(medName, newStock);
                 updateTodayMedicineCount();
 
@@ -255,6 +279,43 @@ namespace smart_medication
                     SortMedicineList();
                     dgvMedicineList.Refresh();
                 }));
+            }
+        }
+
+        private void SaveLogStatus(int scheduleId, bool isChecked)
+        {
+            using (MySqlConnection conn = new MySqlConnection(connectDB))
+            {
+                try
+                {
+                    conn.Open();
+
+                    string checkQuery = "SELECT log_id FROM MedicationLogs WHERE schedule_id = @sid AND taken_date = CURDATE()";
+                    MySqlCommand checkCmd = new MySqlCommand(checkQuery, conn);
+                    checkCmd.Parameters.AddWithValue("@sid", scheduleId);
+                    object result = checkCmd.ExecuteScalar();
+
+                    if (result != null)
+                    {
+                        string updateQuery = "UPDATE MedicationLogs SET is_taken = @taken, taken_at = NOW() WHERE log_id = @lid";
+                        MySqlCommand updateCmd = new MySqlCommand(updateQuery, conn);
+                        updateCmd.Parameters.AddWithValue("@taken", isChecked ? 1 : 0);
+                        updateCmd.Parameters.AddWithValue("@lid", Convert.ToInt32(result));
+                        updateCmd.ExecuteNonQuery();
+                    }
+                    else
+                    {
+                        string insertQuery = "INSERT INTO MedicationLogs (schedule_id, taken_date, is_taken, taken_at) VALUES (@sid, CURDATE(), @taken, NOW())";
+                        MySqlCommand insertCmd = new MySqlCommand(insertQuery, conn);
+                        insertCmd.Parameters.AddWithValue("@sid", scheduleId);
+                        insertCmd.Parameters.AddWithValue("@taken", isChecked ? 1 : 0);
+                        insertCmd.ExecuteNonQuery();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("로그 저장 실패: " + ex.Message);
+                }
             }
         }
 
@@ -323,17 +384,18 @@ namespace smart_medication
                 if (timeStr.StartsWith(currentMinute) && !isTaken)
                 {
                     string message = $"{currentUserName}님, {medName} 복용 시간입니다 ({timeStr})";
-
                     KakaoHelper.SendMessageAsync(message);
 
-                    System.Media.SystemSounds.Exclamation.Play();
+                    System.Media.SystemSounds.Asterisk.Play();
+
                 }
             }
         }
 
+        // [수정] 약물 관리 버튼: 생성자에 this.currentUserName 전달
         private void btnMedicineRegi_Click(object sender, EventArgs e)
         {
-            MedicineForm medForm = new MedicineForm();
+            MedicineForm medForm = new MedicineForm(this.currentUserName);
             medForm.ShowDialog();
             LoadData();
         }

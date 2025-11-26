@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Drawing; // 버튼 색상/위치 설정을 위해 추가
+using System.Drawing;
 using System.Windows.Forms;
 using MySql.Data.MySqlClient;
 
@@ -19,20 +19,18 @@ namespace smart_medication
             InitializeComponent();
             this.currentUserName = userName;
 
-            // [추가] 카톡 테스트 버튼 생성 (메인화면에서 이동됨)
             Button btnTestKakao = new Button();
             btnTestKakao.Text = "카톡 테스트";
             btnTestKakao.BackColor = Color.Yellow;
             btnTestKakao.ForeColor = Color.Black;
             btnTestKakao.Size = new Size(100, 30);
-            // 위치 조정: 제목(복용 시간 관리) 오른쪽 여백에 배치
             btnTestKakao.Location = new Point(480, 15);
             btnTestKakao.Click += BtnTestKakao_Click;
             this.Controls.Add(btnTestKakao);
             btnTestKakao.BringToFront();
 
             GetUserId();
-            LoadMedicationCombo();
+            LoadMedicationCombo(); // 여기서 필터링됨
             LoadScheduleList();
 
             cboMeds.SelectedIndexChanged += CboMeds_SelectedIndexChanged;
@@ -41,15 +39,9 @@ namespace smart_medication
             ResetInputs(false);
         }
 
-        // [추가] 테스트 버튼 클릭 이벤트
         private async void BtnTestKakao_Click(object sender, EventArgs e)
         {
-            // 토큰이 로드되었는지 확인 (보통 Form1에서 로드됨)
-            if (!KakaoHelper.IsTokenLoaded)
-            {
-                // 혹시 로드가 안 되어 있으면 여기서 시도
-                KakaoHelper.LoadToken();
-            }
+            if (!KakaoHelper.IsTokenLoaded) KakaoHelper.LoadToken();
 
             if (!KakaoHelper.IsTokenLoaded)
             {
@@ -82,13 +74,18 @@ namespace smart_medication
 
         private void LoadMedicationCombo()
         {
+            if (currentUserId == -1) return;
+
             using (MySqlConnection conn = new MySqlConnection(connectDB))
             {
                 try
                 {
                     conn.Open();
-                    string query = "SELECT med_id, med_name, stock_quantity FROM Medications ORDER BY med_name";
+                    // [수정] 내 유저 ID(@uid)에 해당하는 약품만 콤보박스에 표시
+                    string query = "SELECT med_id, med_name, stock_quantity FROM Medications WHERE user_id = @uid ORDER BY med_name";
                     MySqlDataAdapter adapter = new MySqlDataAdapter(query, conn);
+                    adapter.SelectCommand.Parameters.AddWithValue("@uid", this.currentUserId);
+
                     DataTable dt = new DataTable();
                     adapter.Fill(dt);
                     cboMeds.DataSource = dt;

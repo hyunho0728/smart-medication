@@ -1,19 +1,17 @@
 ﻿using System;
 using System.Windows.Forms;
-using MySql.Data.MySqlClient; // MySQL 라이브러리
+using MySql.Data.MySqlClient;
 
 namespace smart_medication
 {
     public partial class LoginForm : Form
     {
-        // DB 연결 문자열 (본인 비밀번호로 수정 필수!)
-        string connectionString = "Server=localhost;Database=smart_med_db;Uid=root;Pwd=1234;";
+        string connectionString = "Server=localhost;Port=3306;Database=smart_med_db;Uid=root;Pwd=1234;Charset=utf8";
 
-        // 로그인 성공한 사용자 이름을 저장할 변수
         public string LoggedInUserName { get; private set; }
 
-        // 개발용 자동 로그인
-        bool autoLogin = true;
+        // 개발용 자동 로그인 (테스트 할 때는 true, 실제 사용 시 false로 변경 권장)
+        bool autoLogin = false;
 
         public LoginForm()
         {
@@ -28,11 +26,10 @@ namespace smart_medication
             }
         }
 
-        // 로그인 버튼 클릭 이벤트 (디자이너에서 더블클릭해서 연결 필요)
         private void btnLogin_Click(object sender, EventArgs e)
         {
-            string inputName = txtUserId.Text;
-            string inputPwd = txtPassword.Text;
+            string inputName = txtUserId.Text.Trim();
+            string inputPwd = txtPassword.Text.Trim();
 
             if (string.IsNullOrEmpty(inputName) || string.IsNullOrEmpty(inputPwd))
             {
@@ -42,16 +39,22 @@ namespace smart_medication
 
             if (TryLogin(inputName, inputPwd))
             {
-                // 로그인 성공 시
                 MessageBox.Show($"{inputName}님 환영합니다!");
                 this.LoggedInUserName = inputName;
-                this.DialogResult = DialogResult.OK; // 성공 신호 보냄
-                this.Close(); // 로그인 창 닫기
+                this.DialogResult = DialogResult.OK;
+                this.Close();
             }
             else
             {
                 MessageBox.Show("아이디 또는 비밀번호가 틀렸습니다.");
             }
+        }
+
+        // [추가] 회원가입 버튼 클릭 이벤트
+        private void btnGoRegister_Click(object sender, EventArgs e)
+        {
+            RegisterForm regForm = new RegisterForm();
+            regForm.ShowDialog(); // 모달 창으로 띄움
         }
 
         private bool TryLogin(string name, string pwd)
@@ -61,7 +64,6 @@ namespace smart_medication
                 try
                 {
                     conn.Open();
-                    // DB에서 아이디와 비번이 일치하는지 확인 (COUNT 이용)
                     string query = "SELECT COUNT(*) FROM Users WHERE user_name = @name AND password = @pwd";
 
                     MySqlCommand cmd = new MySqlCommand(query, conn);
@@ -70,7 +72,7 @@ namespace smart_medication
 
                     int count = Convert.ToInt32(cmd.ExecuteScalar());
 
-                    return count > 0; // 1명 이상 있으면 true (성공)
+                    return count > 0;
                 }
                 catch (Exception ex)
                 {

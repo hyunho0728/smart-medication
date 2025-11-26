@@ -2,30 +2,16 @@
 {
     partial class LoginForm
     {
-        /// <summary>
-        /// Required designer variable.
-        /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-            }
+            if (disposing && (components != null)) components.Dispose();
             base.Dispose(disposing);
         }
 
         #region Windows Form Designer generated code
 
-        /// <summary>
-        /// Required method for Designer support - do not modify
-        /// the contents of this method with the code editor.
-        /// </summary>
         private void InitializeComponent()
         {
             this.label1 = new System.Windows.Forms.Label();
@@ -33,6 +19,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.txtPassword = new System.Windows.Forms.TextBox();
             this.btnLogin = new System.Windows.Forms.Button();
+            this.btnGoRegister = new System.Windows.Forms.Button(); // [추가]
             this.SuspendLayout();
             // 
             // label1 (아이디 라벨)
@@ -45,7 +32,7 @@
             this.label1.TabIndex = 0;
             this.label1.Text = "아이디";
             // 
-            // txtUserId (아이디 입력칸)
+            // txtUserId
             // 
             this.txtUserId.Font = new System.Drawing.Font("맑은 고딕", 10F);
             this.txtUserId.Location = new System.Drawing.Point(44, 55);
@@ -63,22 +50,22 @@
             this.label2.TabIndex = 2;
             this.label2.Text = "비밀번호";
             // 
-            // txtPassword (비밀번호 입력칸)
+            // txtPassword
             // 
             this.txtPassword.Font = new System.Drawing.Font("맑은 고딕", 10F);
             this.txtPassword.Location = new System.Drawing.Point(44, 125);
             this.txtPassword.Name = "txtPassword";
-            this.txtPassword.PasswordChar = '*'; // 비밀번호 가리기 설정
+            this.txtPassword.PasswordChar = '●';
             this.txtPassword.Size = new System.Drawing.Size(250, 25);
             this.txtPassword.TabIndex = 3;
             // 
-            // btnLogin (로그인 버튼)
+            // btnLogin
             // 
             this.btnLogin.BackColor = System.Drawing.Color.SteelBlue;
             this.btnLogin.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnLogin.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
             this.btnLogin.ForeColor = System.Drawing.Color.White;
-            this.btnLogin.Location = new System.Drawing.Point(44, 180);
+            this.btnLogin.Location = new System.Drawing.Point(44, 170);
             this.btnLogin.Name = "btnLogin";
             this.btnLogin.Size = new System.Drawing.Size(250, 45);
             this.btnLogin.TabIndex = 4;
@@ -86,12 +73,27 @@
             this.btnLogin.UseVisualStyleBackColor = false;
             this.btnLogin.Click += new System.EventHandler(this.btnLogin_Click);
             // 
+            // btnGoRegister (회원가입 버튼 - 추가됨)
+            // 
+            this.btnGoRegister.BackColor = System.Drawing.Color.White;
+            this.btnGoRegister.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnGoRegister.Font = new System.Drawing.Font("맑은 고딕", 9F);
+            this.btnGoRegister.ForeColor = System.Drawing.Color.DimGray;
+            this.btnGoRegister.Location = new System.Drawing.Point(44, 225);
+            this.btnGoRegister.Name = "btnGoRegister";
+            this.btnGoRegister.Size = new System.Drawing.Size(250, 30);
+            this.btnGoRegister.TabIndex = 5;
+            this.btnGoRegister.Text = "회원가입";
+            this.btnGoRegister.UseVisualStyleBackColor = false;
+            this.btnGoRegister.Click += new System.EventHandler(this.btnGoRegister_Click);
+            // 
             // LoginForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.White;
             this.ClientSize = new System.Drawing.Size(340, 280);
+            this.Controls.Add(this.btnGoRegister);
             this.Controls.Add(this.btnLogin);
             this.Controls.Add(this.txtPassword);
             this.Controls.Add(this.label2);
@@ -105,7 +107,6 @@
             this.Text = "로그인 - Smart Medication";
             this.ResumeLayout(false);
             this.PerformLayout();
-
         }
 
         #endregion
@@ -115,5 +116,6 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox txtPassword;
         private System.Windows.Forms.Button btnLogin;
+        private System.Windows.Forms.Button btnGoRegister; // [추가]
     }
 }

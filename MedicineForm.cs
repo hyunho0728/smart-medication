@@ -9,24 +9,50 @@ namespace smart_medication
     {
         string connectDB = "Server=localhost;Port=3306;Database=smart_med_db;Uid=root;Pwd=1234;Charset=utf8";
 
-        // 현재 선택된 약품의 ID를 저장 (-1이면 선택 안됨)
         private int selectedMedId = -1;
+        private string currentUserName;
+        private int currentUserId = -1;
 
-        public MedicineForm()
+        // 생성자 변경: 사용자 이름을 받음
+        public MedicineForm(string userName)
         {
             InitializeComponent();
+            this.currentUserName = userName;
+            GetUserId(); // 사용자 ID 조회
             LoadDrugList();
         }
 
-        private void LoadDrugList()
+        private void GetUserId()
         {
             using (MySqlConnection conn = new MySqlConnection(connectDB))
             {
                 try
                 {
                     conn.Open();
-                    string query = "SELECT med_id, med_name, stock_quantity FROM Medications ORDER BY med_name";
+                    string query = "SELECT user_id FROM Users WHERE user_name = @name";
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@name", this.currentUserName);
+                    object result = cmd.ExecuteScalar();
+                    if (result != null) this.currentUserId = Convert.ToInt32(result);
+                }
+                catch (Exception ex) { MessageBox.Show("사용자 정보 로드 실패: " + ex.Message); }
+            }
+        }
+
+        private void LoadDrugList()
+        {
+            if (currentUserId == -1) return;
+
+            using (MySqlConnection conn = new MySqlConnection(connectDB))
+            {
+                try
+                {
+                    conn.Open();
+                    // [수정] 내 아이디(user_id)에 해당하는 약품만 조회
+                    string query = "SELECT med_id, med_name, stock_quantity FROM Medications WHERE user_id = @uid ORDER BY med_name";
                     MySqlDataAdapter adapter = new MySqlDataAdapter(query, conn);
+                    adapter.SelectCommand.Parameters.AddWithValue("@uid", this.currentUserId);
+
                     DataTable dt = new DataTable();
                     adapter.Fill(dt);
 
@@ -40,17 +66,12 @@ namespace smart_medication
             }
         }
 
-        // [추가] 리스트의 셀을 클릭하면 데이터를 입력칸으로 가져오기
         private void dgvDrugs_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex >= 0)
             {
                 DataGridViewRow row = dgvDrugs.Rows[e.RowIndex];
-
-                // 선택된 ID 저장
                 selectedMedId = Convert.ToInt32(row.Cells["med_id"].Value);
-
-                // 입력칸에 값 채우기
                 txtMedName.Text = row.Cells["med_name"].Value.ToString();
                 numStock.Value = Convert.ToInt32(row.Cells["stock_quantity"].Value);
             }
@@ -69,26 +90,27 @@ namespace smart_medication
                 try
                 {
                     conn.Open();
-                    string query = "INSERT INTO Medications (med_name, stock_quantity) VALUES (@name, @stock)";
+                    // [수정] user_id 포함하여 저장
+                    string query = "INSERT INTO Medications (med_name, stock_quantity, user_id) VALUES (@name, @stock, @uid)";
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@name", txtMedName.Text);
                     cmd.Parameters.AddWithValue("@stock", (int)numStock.Value);
+                    cmd.Parameters.AddWithValue("@uid", this.currentUserId);
                     cmd.ExecuteNonQuery();
 
                     MessageBox.Show("등록되었습니다.");
-                    ResetInput(); // 입력칸 초기화
+                    ResetInput();
                     LoadDrugList();
                 }
                 catch (Exception ex) { MessageBox.Show("등록 에러: " + ex.Message); }
             }
         }
 
-        // [추가] 수정 버튼 로직
         private void BtnUpdate_Click(object sender, EventArgs e)
         {
             if (selectedMedId == -1)
             {
-                MessageBox.Show("수정할 약품을 목록에서 선택해주세요.");
+                MessageBox.Show("수정할 약품을 선택해주세요.");
                 return;
             }
 
@@ -103,17 +125,25 @@ namespace smart_medication
                 try
                 {
                     conn.Open();
-                    // 이름과 재고 모두 수정 가능
-                    string query = "UPDATE Medications SET med_name = @name, stock_quantity = @stock WHERE med_id = @id";
+                    // [수정] 내 약품인지 확인하는 조건(@uid) 추가 (혹시 모를 오류 방지)
+                    string query = "UPDATE Medications SET med_name = @name, stock_quantity = @stock WHERE med_id = @id AND user_id = @uid";
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@name", txtMedName.Text);
                     cmd.Parameters.AddWithValue("@stock", (int)numStock.Value);
                     cmd.Parameters.AddWithValue("@id", selectedMedId);
-                    cmd.ExecuteNonQuery();
+                    cmd.Parameters.AddWithValue("@uid", this.currentUserId);
 
-                    MessageBox.Show("수정되었습니다.");
-                    ResetInput();
-                    LoadDrugList();
+                    int rows = cmd.ExecuteNonQuery();
+                    if (rows > 0)
+                    {
+                        MessageBox.Show("수정되었습니다.");
+                        ResetInput();
+                        LoadDrugList();
+                    }
+                    else
+                    {
+                        MessageBox.Show("수정 권한이 없거나 약품을 찾을 수 없습니다.");
+                    }
                 }
                 catch (Exception ex) { MessageBox.Show("수정 에러: " + ex.Message); }
             }
@@ -136,13 +166,15 @@ namespace smart_medication
                     using (MySqlConnection conn = new MySqlConnection(connectDB))
                     {
                         conn.Open();
-                        string query = "DELETE FROM Medications WHERE med_id = @id";
+                        // [수정] 내 약품만 삭제
+                        string query = "DELETE FROM Medications WHERE med_id = @id AND user_id = @uid";
                         MySqlCommand cmd = new MySqlCommand(query, conn);
                         cmd.Parameters.AddWithValue("@id", medId);
+                        cmd.Parameters.AddWithValue("@uid", this.currentUserId);
                         cmd.ExecuteNonQuery();
                     }
 
-                    ResetInput(); // 삭제 후 입력칸도 비움
+                    ResetInput();
                     LoadDrugList();
                 }
                 catch (Exception ex)
@@ -152,12 +184,11 @@ namespace smart_medication
             }
         }
 
-        // 입력칸 초기화 헬퍼 함수
         private void ResetInput()
         {
             txtMedName.Clear();
             numStock.Value = 0;
-            selectedMedId = -1; // 선택 상태 해제
+            selectedMedId = -1;
         }
     }
 }
