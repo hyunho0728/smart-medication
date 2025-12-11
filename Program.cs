@@ -29,6 +29,7 @@ namespace smart_medication
                     // 2. 테이블 생성
                     List<string> query = new List<string>();
 
+                    // 2-1. 사용자 테이블 생성
                     query.Add(@"CREATE TABLE IF NOT EXISTS `users` (
                               `user_id` int NOT NULL AUTO_INCREMENT COMMENT '사용자 고유 ID',
                               `user_name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '사용자 이름 (예: 유현호)',
@@ -37,6 +38,7 @@ namespace smart_medication
                               PRIMARY KEY (`user_id`)
                             ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
 
+                    // 2-2. 약품 테이블 생성
                     query.Add(@"CREATE TABLE IF NOT EXISTS `medications` (
                               `med_id` int NOT NULL AUTO_INCREMENT COMMENT '약품 고유 ID',
                               `med_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '약품명 (예: 타이레놀)',
@@ -47,6 +49,7 @@ namespace smart_medication
                               PRIMARY KEY (`med_id`)
                             ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
 
+                    // 2-3. 스케줄 테이블 생성
                     query.Add(@"CREATE TABLE IF NOT EXISTS `schedules` (
                               `schedule_id` int NOT NULL AUTO_INCREMENT COMMENT '스케줄 고유 ID',
                               `user_id` int NOT NULL COMMENT '사용자 ID',
@@ -61,6 +64,7 @@ namespace smart_medication
                               CONSTRAINT `schedules_ibfk_2` FOREIGN KEY (`med_id`) REFERENCES `medications` (`med_id`) ON DELETE CASCADE
                             ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
 
+                    // 2-4. 복용 기록 테이블 생성
                     query.Add(@"CREATE TABLE IF NOT EXISTS `medicationlogs` (
                               `log_id` int NOT NULL AUTO_INCREMENT,
                               `schedule_id` int NOT NULL,
@@ -81,6 +85,7 @@ namespace smart_medication
                     // 3. 마이그레이션: Medications 테이블에 user_id 컬럼 추가
                     try
                     {
+                        // 3-1. user_id 컬럼 존재 여부 확인
                         cmd.CommandText = "SHOW COLUMNS FROM `medications` LIKE 'user_id';";
                         if (cmd.ExecuteScalar() == null)
                         {
@@ -101,6 +106,7 @@ namespace smart_medication
                     // 4. 마이그레이션: Schedules 테이블에 dosage_per_take 컬럼 추가 (이전 요청사항)
                     try
                     {
+                        // 4-1 dosage_per_take 컬럼 존재 여부 확인
                         cmd.CommandText = "SHOW COLUMNS FROM `schedules` LIKE 'dosage_per_take';";
                         if (cmd.ExecuteScalar() == null)
                         {
