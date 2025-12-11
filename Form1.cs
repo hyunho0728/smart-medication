@@ -360,6 +360,7 @@ namespace smart_medication
 
         private void updateTimer_Tick(object sender, EventArgs e)
         {
+            updateTodayMedicineCount();
             updateCurrentTime();
             CheckAndSendKakaoAlert();
         }
